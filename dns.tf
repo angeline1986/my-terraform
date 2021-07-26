@@ -6,9 +6,10 @@ data "aws_route53_zone" "qangeline" {
 
 #Registro DNS apontando para a máquina
 resource "aws_route53_record" "www" {
+  count = 3
   zone_id = data.aws_route53_zone.qangeline.zone_id
-  name    = "vm01"
+  name    = "vm0${count.index+1}"
   type    = "A"
   ttl     = "300"
-  records = [aws_eip.ip_01.public_ip]
+  records = [aws_eip.ips[count.index].public_ip]
 }

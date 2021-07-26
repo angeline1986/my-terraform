@@ -6,8 +6,9 @@ resource "aws_key_pair" "aline_key" {
 
 #Placa de rede que será usada pela instância
 resource "aws_network_interface" "interface" {
+  count = 3
   subnet_id   = aws_subnet.vms.id
-  private_ips = ["10.0.0.100"]
+  private_ips = ["10.0.0.10${count.index}"]
   security_groups = [aws_security_group.allow_ssh.id]
 
   tags = {
@@ -16,27 +17,28 @@ resource "aws_network_interface" "interface" {
 }
 
 #IP públic
-resource "aws_eip" "ip_01" {
+resource "aws_eip" "ips" {
+  count = 3
   vpc                       = true
-  network_interface         = aws_network_interface.interface.id
-  associate_with_private_ip = "10.0.0.100"
+  network_interface         = aws_network_interface.interface[count.index].id
+  associate_with_private_ip = "10.0.0.10${count.index}"
 }
 
 #Instância aline-vm-01
-resource "aws_instance" "aline_vm_01" {
-
+resource "aws_instance" "aline_vms" {
+  count = 3
   ami               = data.aws_ami.ubuntu.id
   instance_type     = "t3.micro"
   availability_zone = "us-east-1a"
   key_name          = aws_key_pair.aline_key.key_name
   
   network_interface {
-    network_interface_id = aws_network_interface.interface.id
+    network_interface_id = aws_network_interface.interface[count.index].id
     device_index         = 0
   }
 
   tags = {
-    Name = "aline-vm-01"
+    Name = "aline-vm-0${count.index}"
   }
 }
 
